@@ -65,8 +65,15 @@ func postTask(p http.ResponseWriter, u *http.Request) {
 		http.Error(p, err.Error(), http.StatusBadRequest)
 		return
 	}
+
+	_, ok := tasks[task.ID]
+	if ok {
+		http.Error(p, "Задача уже существует", http.StatusBadRequest)
+		return
+	}
+
 	tasks[task.ID] = task
-	p.Header().Set("Content-Type", "application/son")
+	p.Header().Set("Content-Type", "application/json")
 	p.WriteHeader(http.StatusCreated)
 }
 
@@ -74,12 +81,12 @@ func getTask(q http.ResponseWriter, t *http.Request) {
 	taskID := chi.URLParam(t, "id")
 	task, ok := tasks[taskID]
 	if !ok {
-		http.Error(q, "Задача не найдена %s", http.StatusNoContent)
+		http.Error(q, "Задача не найдена", http.StatusBadRequest)
 		return
 	}
 	resp, err := json.Marshal(task)
 	if err != nil {
-		http.Error(q, err.Error(), http.StatusNoContent)
+		http.Error(q, err.Error(), http.StatusBadRequest)
 		return
 	}
 	q.Header().Set("Content-Type", "application/json")
@@ -91,7 +98,7 @@ func deleteTask(d http.ResponseWriter, e *http.Request) {
 	deleteTaskId := chi.URLParam(e, "id")
 	_, ok := tasks[deleteTaskId]
 	if !ok {
-		http.Error(d, "Задача не найдена %s", http.StatusNoContent)
+		http.Error(d, "Задача не найдена", http.StatusBadRequest)
 		return
 	}
 	delete(tasks, deleteTaskId)
